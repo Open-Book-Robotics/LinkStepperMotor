@@ -1,6 +1,11 @@
 #include "LinkStepperMotor.hpp"
 #include <Arduino.h>
 
+// TODO: Write documentation for all functions
+// TODO: Add support for acceleration and deceleration curves
+// TODO: Move all implementation to .cpp file and offer .hpp as the only visible file for library
+// TODO: Test library with physical hardware
+
 void LinkStepperMotor::enable() {
 	this->isEnabled = true;
 	digitalWrite(this->enablePin, LOW);
