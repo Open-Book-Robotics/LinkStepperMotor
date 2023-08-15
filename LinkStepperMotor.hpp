@@ -1,0 +1,189 @@
+#pragma once
+/**
+ * @file LinkStepperMotor.hpp
+ * @author Sharwin Patil, RoboKits
+ * @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
+ * @version 1.0
+ * @date 2023-08-15
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
+#include <Arduino.h>
+
+ /**
+	* @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
+	*
+	*/
+class LinkStepperMotor {
+public:
+
+	/**
+	 * @brief Deleted default constructor to enforce use of parameterized constructor.
+	 *
+	 */
+	LinkStepperMotor() = delete;
+
+	/**
+	 * @brief Default destructor.
+	 *
+	 */
+	~LinkStepperMotor() = default;
+
+	/**
+	 * @brief Copy constructor deleted to prevent copying of object.
+	 *
+	 */
+	LinkStepperMotor(const LinkStepperMotor&) = delete;
+
+	/**
+	 * @brief Assignment operator deleted to prevent copying of object.
+	 *
+	 */
+	LinkStepperMotor& operator=(const LinkStepperMotor&) = delete;
+
+	/**
+	 * @brief Parameterized constructor to initialize the LinkStepperMotor object.
+	 *
+	 * @param stepPin The pin number to which the step pin of the stepper motor is connected.
+	 * @param dirPin The pin number to which the direction pin of the stepper motor is connected.
+	 * @param enablePin The pin number to which the enable pin of the stepper motor is connected.
+	 * @param stepsPerRevolution The number of steps per revolution of the stepper motor, ensure that this value already accounts for microstepping.
+	 * @param gearRatio The gear ratio of the output. (Eg. 1:5 gear ratio would be 5, for 5 revolutions of the motor, the output would rotate 1 revolution)
+	 */
+	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint16_t stepsPerRevolution, float gearRatio) :
+		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
+
+	void enable();
+
+	void disable();
+
+	void initialize(float linkRPM);
+
+	void calibrate(bool calibrationDirection, uint8_t calibrationPin, bool calibrationNO = true);
+
+	inline long getCurrentPosition() const { return this->currentPosition; }
+	inline long getTargetPosition() const { return this->targetPosition; }
+	inline float getCurrentAngle() const { return this->currentAngle; }
+
+	inline void setTargetPosition(long targetPosition) {
+		this->previousPosition = this->currentPosition;
+		this->targetPosition = targetPosition;
+		this->currentDirection = targetPosition > this->currentPosition;
+	}
+	inline void setSpeed(uint16_t speed) {
+		this->currentSpeed = speed;
+		this->currentDelay = getDelayFromSpeed(speed);
+	}
+	inline void setDirection(bool CW) {
+		CW ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
+		this->currentDirection = CW;
+	}
+
+	inline bool isMoving() const { return this->targetPosition != this->currentPosition; }
+
+	void update();
+
+private:
+	uint8_t stepPin;
+	uint8_t dirPin;
+	uint8_t enablePin;
+	uint8_t calibrationPin;
+	uint16_t stepsPerRevolution;
+	float gearRatio;
+
+	/**
+	 * @brief Determines if the motor is enabled or not.
+	 *
+	 * @note This value is updated by calling the enable() and disable() functions,
+	 * 			 which in turn pull the enable pin HIGH or LOW respectively.
+	 */
+	bool isEnabled = false;
+
+	/**
+	 * @brief A flag that the update() function uses to saw between a HIGH/LOW pulse on every iteration
+	 *
+	 */
+	volatile bool isRunning = false;
+
+	/**
+	 * @brief The current angle of the motor [degrees], computed using the current position, steps per revolution and gear ratio.
+	 *
+	 */
+	float currentAngle = 0;
+
+	/**
+	 * @brief The current position of the motor [steps]
+	 *
+	 */
+	long currentPosition = 0;
+
+	/**
+	 * @brief The previous position of the motor [steps]
+	 *
+	 */
+	long previousPosition = 0;
+
+	/**
+	 * @brief The target position of the motor [steps]
+	 *
+	 * @note This value is updated by setting the target but only update() functions will move the motor.
+	 */
+	long targetPosition = 0;
+
+	/**
+	 * @brief The current direction of the motor [True -> CW, False -> CCW]
+	 *
+	 */
+	bool currentDirection = false;
+
+	/**
+	 * @brief The previous time at which the motor was stepped [microseconds]
+	 *
+	 * @note This is intended to be assigned to the output of micros() function.
+	 */
+	unsigned long previousModulationTime = 0;
+
+	/**
+	 * @brief The current delay between steps [microseconds]
+	 *
+	 * @note This is computed using the current speed and acceleration.
+	 */
+	unsigned long currentDelay = 0;
+
+	/**
+	 * @brief The current speed of the motor [steps/second]
+	 *
+	 */
+	uint16_t currentSpeed = 0;
+
+	/**
+	 * @brief The current acceleration of the motor [steps/second^2]
+	 *
+	 */
+	uint16_t currentAcceleration = 0;
+
+	/**
+	 * @brief Converts the target output angle into steps the link motor needs to accomplish that angle
+	 *
+	 * @param degrees The target angle of the motor [degrees] [0, 360)
+	 * @return uint16_t The number of steps the motor needs to move to accomplish the target angle
+	 */
+	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
+
+	/**
+	 * @brief Using the currentSpeed, calculate the delay between steps [microseconds]
+	 *
+	 * @return unsigned long representing the delay between steps [microseconds]
+	 */
+	static inline unsigned long getDelayFromSpeed(uint16_t speed) const { return (long)(1000000.0f / speed); }
+
+	/**
+	 * @brief Performs a single step using the current delay.
+	 *
+	 */
+	void stepMotor();
+
+	void updateCurrentAngle();
+};
