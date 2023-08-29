@@ -16,14 +16,12 @@ void LinkStepperMotor::disable() {
 	digitalWrite(this->enablePin, HIGH);
 }
 
-void LinkStepperMotor::initialize(float linkRPM) {
+void LinkStepperMotor::initialize() {
 	// Setup pins
 	pinMode(this->stepPin, OUTPUT);
 	pinMode(this->dirPin, OUTPUT);
+	pinMode(this->enablePin, OUTPUT);
 
-	// Convert RPM to steps/second
-	uint16_t linkSPS = (linkRPM / 60.0f) * this->stepsPerRevolution * this->gearRatio;
-	this->setSpeed(linkSPS);
 	this->enable();
 }
 
@@ -55,7 +53,7 @@ void LinkStepperMotor::calibrate(bool calibrationDirection, uint8_t calibrationP
 
 void LinkStepperMotor::update() {
 	// If the motor is not enabled, do nothing and if the motor is not moving, we have reached the target
-	if (!this->isEnabled || !this->isMoving) { return; }
+	if (!this->isEnabled || !this->isMoving()) { return; }
 
 	// Determine the time since the last step
 	unsigned long currentTime = micros();
@@ -80,7 +78,29 @@ void LinkStepperMotor::stepMotor() {
 	delayMicroseconds(this->currentDelay);
 }
 
+bool LinkStepperMotor::isMoving() const { return this->currentPosition != this->targetPosition; }
+
 void LinkStepperMotor::updateCurrentAngle() {
-	// Convert current position from steps to angle in degrees
 	this->currentAngle = (this->currentPosition / ((float)this->stepsPerRevolution * this->gearRatio)) * 360.0f;
+}
+
+void LinkStepperMotor::setTargetPosition(long targetPosition) {
+	this->previousPosition = this->currentPosition;
+	this->targetPosition = targetPosition;
+	this->currentDirection = this->targetPosition > this->currentPosition;
+}
+
+void LinkStepperMotor::setSpeedRPM(unsigned float speedRPM) {
+	uint16_t linkSPS = (speedRPM / 60.0f) * this->stepsPerRevolution * this->gearRatio;
+	this->setSpeedSPS(linkSPS);
+}
+
+void LinkStepperMotor::setSpeedSPS(uint16_t speedSPS) {
+	this->currentSpeedSPS = speedSPS;
+	this->currentDelay = this->getDelayFromSpeed(speedSPS);
+}
+
+void LinkStepperMotor::setDirection(bool CW) {
+	CW ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
+	this->currentDirection = CW;
 }

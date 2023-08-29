@@ -12,10 +12,13 @@
 
 #include <Arduino.h>
 
- /**
-	* @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
-	*
-	*/
+
+ /// TODO: Documentation
+
+/**
+* @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
+*
+*/
 class LinkStepperMotor {
 public:
 
@@ -55,11 +58,10 @@ public:
 	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint16_t stepsPerRevolution, float gearRatio) :
 		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
 
-	void enable();
+	inline void enable();
+	inline void disable();
 
-	void disable();
-
-	void initialize(float linkRPM);
+	void initialize();
 
 	void calibrate(bool calibrationDirection, uint8_t calibrationPin, bool calibrationNO = true);
 
@@ -67,31 +69,20 @@ public:
 	inline long getTargetPosition() const { return this->targetPosition; }
 	inline float getCurrentAngle() const { return this->currentAngle; }
 
-	inline void setTargetPosition(long targetPosition) {
-		this->previousPosition = this->currentPosition;
-		this->targetPosition = targetPosition;
-		this->currentDirection = targetPosition > this->currentPosition;
-	}
-	inline void setSpeed(uint16_t speed) {
-		this->currentSpeed = speed;
-		this->currentDelay = getDelayFromSpeed(speed);
-	}
-	inline void setDirection(bool CW) {
-		CW ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
-		this->currentDirection = CW;
-	}
+	inline void setTargetPosition(long targetPosition);
+	inline void setSpeedRPM(unsigned float speedRPM);
 
-	inline bool isMoving() const { return this->targetPosition != this->currentPosition; }
+	inline bool isMoving() const;
 
 	void update();
 
 private:
-	uint8_t stepPin;
-	uint8_t dirPin;
-	uint8_t enablePin;
-	uint8_t calibrationPin;
-	uint16_t stepsPerRevolution;
-	float gearRatio;
+	const uint8_t stepPin;
+	const uint8_t dirPin;
+	const uint8_t enablePin;
+	const uint8_t calibrationPin;
+	const uint16_t stepsPerRevolution;
+	const float gearRatio;
 
 	/**
 	 * @brief Determines if the motor is enabled or not.
@@ -102,7 +93,7 @@ private:
 	bool isEnabled = false;
 
 	/**
-	 * @brief A flag that the update() function uses to saw between a HIGH/LOW pulse on every iteration
+	 * @brief A flag that the update() function uses to swap between a HIGH/LOW pulse on every iteration
 	 *
 	 */
 	volatile bool isRunning = false;
@@ -155,8 +146,18 @@ private:
 	/**
 	 * @brief The current speed of the motor [steps/second]
 	 *
+	 * @note Defaults to 60 RPM (1 revolution/second)
+	 *
 	 */
-	uint16_t currentSpeed = 0;
+	uint16_t currentSpeedSPS = this->stepsPerRevolution * this->gearRatio;
+
+	/**
+	 * @brief The current speed of the motor [revolutions/minute]
+	 *
+	 * @note Defaults to 60 RPM
+	 *
+	 */
+	unsigned float currentSpeedRPM = 60;
 
 	/**
 	 * @brief The current acceleration of the motor [steps/second^2]
@@ -164,16 +165,23 @@ private:
 	 */
 	uint16_t currentAcceleration = 0;
 
+	inline void setDirection(bool CW);
+	inline void setSpeedSPS(uint16_t speedSPS);
+
 	/**
 	 * @brief Converts the target output angle into steps the link motor needs to accomplish that angle
+	 *
+	 * @note This is NOT relative to the current position of the motor, it is simply a conversion function of desired output degrees to steps
 	 *
 	 * @param degrees The target angle of the motor [degrees] [0, 360)
 	 * @return uint16_t The number of steps the motor needs to move to accomplish the target angle
 	 */
-	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
+	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.f) * this->stepsPerRevolution * this->gearRatio); }
 
 	/**
-	 * @brief Using the currentSpeed, calculate the delay between steps [microseconds]
+	 * @brief Given a speed [steps/second], calculate the delay between steps [microseconds]
+	 *
+	 * @param speed The speed of the motor [steps/second]
 	 *
 	 * @return unsigned long representing the delay between steps [microseconds]
 	 */
@@ -185,5 +193,5 @@ private:
 	 */
 	void stepMotor();
 
-	void updateCurrentAngle();
+	inline void updateCurrentAngle();
 };
