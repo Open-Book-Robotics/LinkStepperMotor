@@ -66,7 +66,9 @@ void LinkStepperMotor::update() {
 		// Speed can be reassigned here to compute a new currentDelay depending on the progress of the movement
 		if (!this->isRunning) {
 			// Increment/Decrement steps during LOW pulse in order to avoid missing steps
-			this->currentPosition < this->targetPosition ? this->currentPosition++ : this->currentPosition--;
+			if (this->currentPosition != this->targetPosition) {
+				this->currentPosition < this->targetPosition ? this->currentPosition++ : this->currentPosition--;
+			}
 		}
 	}
 }
