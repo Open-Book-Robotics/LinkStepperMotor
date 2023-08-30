@@ -52,18 +52,22 @@ public:
 	 * @param stepPin The pin number to which the step pin of the stepper motor is connected.
 	 * @param dirPin The pin number to which the direction pin of the stepper motor is connected.
 	 * @param enablePin The pin number to which the enable pin of the stepper motor is connected.
+	 * @param calibrationPin The pin number to which a calibration sensor (limit switch or hall effect) of the stepper motor is connected.
 	 * @param stepsPerRevolution The number of steps per revolution of the stepper motor, ensure that this value already accounts for microstepping.
 	 * @param gearRatio The gear ratio of the output. (Eg. 1:5 gear ratio would be 5, for 5 revolutions of the motor, the output would rotate 1 revolution)
+	 *
+	 * @note If the motor does not have a calibration sensor, set this value to -1.
 	 */
-	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint16_t stepsPerRevolution, float gearRatio) :
-		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
+	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio) :
+		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), calibrationPin(calibrationPin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
 
-	inline void enable();
-	inline void disable();
+	inline void enable() { digitalWrite(this->enablePin, LOW); }
+	inline void disable() { digitalWrite(this->enablePin, HIGH); }
+	inline bool isEnabled() const { return !digitalRead(this->enablePin); }
 
 	void initialize();
 
-	void calibrate(bool calibrationDirection, uint8_t calibrationPin, bool calibrationNO = true);
+	void calibrate(bool calibrationDirection, bool calibrationNO = true);
 
 	inline long getCurrentPosition() const { return this->currentPosition; }
 	inline long getTargetPosition() const { return this->targetPosition; }
@@ -83,14 +87,6 @@ private:
 	const uint8_t calibrationPin;
 	const uint16_t stepsPerRevolution;
 	const float gearRatio;
-
-	/**
-	 * @brief Determines if the motor is enabled or not.
-	 *
-	 * @note This value is updated by calling the enable() and disable() functions,
-	 * 			 which in turn pull the enable pin HIGH or LOW respectively.
-	 */
-	bool isEnabled = false;
 
 	/**
 	 * @brief A flag that the update() function uses to swap between a HIGH/LOW pulse on every iteration

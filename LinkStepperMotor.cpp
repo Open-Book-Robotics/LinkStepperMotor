@@ -6,16 +6,6 @@
 // TODO: Move all implementation to .cpp file and offer .hpp as the only visible file for library
 // TODO: Test library with physical hardware
 
-void LinkStepperMotor::enable() {
-	this->isEnabled = true;
-	digitalWrite(this->enablePin, LOW);
-}
-
-void LinkStepperMotor::disable() {
-	this->isEnabled = false;
-	digitalWrite(this->enablePin, HIGH);
-}
-
 void LinkStepperMotor::initialize() {
 	// Setup pins
 	pinMode(this->stepPin, OUTPUT);
@@ -25,20 +15,16 @@ void LinkStepperMotor::initialize() {
 	this->enable();
 }
 
-void LinkStepperMotor::calibrate(bool calibrationDirection, uint8_t calibrationPin, bool calibrationNO) {
+void LinkStepperMotor::calibrate(bool calibrationDirection, bool calibrationNO) {
+	if (this->calibrationPin == -1) { return; }
 	// Set the calibration pin to the correct mode
 	if (calibrationNO) {
-		pinMode(calibrationPin, INPUT_PULLUP);
+		pinMode(this->calibrationPin, INPUT_PULLUP);
 	} else {
-		pinMode(calibrationPin, INPUT);
+		pinMode(this->calibrationPin, INPUT);
 	}
-	this->calibrationPin = calibrationPin;
 	// Set the calibration pin to the correct state
-	if (calibrationDirection) {
-		digitalWrite(this->dirPin, HIGH);
-	} else {
-		digitalWrite(this->dirPin, LOW);
-	}
+	calibrationDirection ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
 
 	// Wait for the calibration pin to be pressed
 	int initialCalibrationPinState = digitalRead(calibrationPin);
@@ -52,8 +38,8 @@ void LinkStepperMotor::calibrate(bool calibrationDirection, uint8_t calibrationP
 }
 
 void LinkStepperMotor::update() {
-	// If the motor is not enabled, do nothing and if the motor is not moving, we have reached the target
-	if (!this->isEnabled || !this->isMoving()) { return; }
+	// If the motor is not moving, we have reached the target
+	if (!this->isMoving()) { return; }
 
 	// Determine the time since the last step
 	unsigned long currentTime = micros();
