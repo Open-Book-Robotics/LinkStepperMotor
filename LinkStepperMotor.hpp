@@ -176,7 +176,7 @@ private:
 	 * @param degrees The target angle of the motor [degrees] [0, 360)
 	 * @return uint16_t The number of steps the motor needs to move to accomplish the target angle
 	 */
-	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.f) * this->stepsPerRevolution * this->gearRatio); }
+	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
 
 	/**
 	 * @brief Given a speed [steps/second], calculate the delay between steps [microseconds]
