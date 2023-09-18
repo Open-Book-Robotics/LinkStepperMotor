@@ -43,7 +43,7 @@ void LinkStepperMotor::update() {
 
 	// Determine the time since the last step
 	unsigned long currentTime = micros();
-	long timeSinceLastStep = currentTime - this->previousModulationTime;
+	unsigned long timeSinceLastStep = currentTime - this->previousModulationTime;
 	if (timeSinceLastStep > this->currentDelay) {
 		// Swap HIGH/LOW pulse on every occurance of the delay
 		this->isRunning = !this->isRunning;
