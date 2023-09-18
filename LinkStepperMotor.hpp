@@ -74,7 +74,7 @@ public:
 	inline float getCurrentAngle() const { return this->currentAngle; }
 
 	inline void setTargetPosition(long targetPosition);
-	inline void setSpeedRPM(unsigned float speedRPM);
+	inline void setSpeedRPM(float speedRPM);
 
 	inline bool isMoving() const;
 
@@ -153,7 +153,7 @@ private:
 	 * @note Defaults to 60 RPM
 	 *
 	 */
-	unsigned float currentSpeedRPM = 60;
+	float currentSpeedRPM = 60;
 
 	/**
 	 * @brief The current acceleration of the motor [steps/second^2]
@@ -181,7 +181,7 @@ private:
 	 *
 	 * @return unsigned long representing the delay between steps [microseconds]
 	 */
-	static inline unsigned long getDelayFromSpeed(uint16_t speed) const { return (long)(1000000.0f / speed); }
+	static inline unsigned long getDelayFromSpeed(uint16_t speed) { return (long)(1000000.0f / speed); }
 
 	/**
 	 * @brief Performs a single step using the current delay.
