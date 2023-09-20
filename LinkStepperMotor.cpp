@@ -66,7 +66,7 @@ void LinkStepperMotor::stepMotor() {
 	delayMicroseconds(this->currentDelay);
 }
 
-bool LinkStepperMotor::isMoving() const { return this->currentPosition != this->targetPosition; }
+bool LinkStepperMotor::isMoving() { return this->currentPosition != this->targetPosition; }
 
 void LinkStepperMotor::updateCurrentAngle() {
 	this->currentAngle = (this->currentPosition / ((float)this->stepsPerRevolution * this->gearRatio)) * 360.0f;
