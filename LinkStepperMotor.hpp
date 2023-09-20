@@ -76,7 +76,7 @@ public:
 	inline void setTargetPositionDegrees(float targetAngleDegrees);
 	inline void setSpeedRPM(float speedRPM);
 
-	inline bool isMoving() const;
+	inline bool isMoving();
 
 	void update();
 
