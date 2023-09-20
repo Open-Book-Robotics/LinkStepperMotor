@@ -73,7 +73,7 @@ public:
 	inline long getTargetPosition() const { return this->targetPosition; }
 	inline float getCurrentAngle() const { return this->currentAngle; }
 
-	inline void setTargetPosition(long targetPosition);
+	inline void setTargetPositionDegrees(float targetAngleDegrees);
 	inline void setSpeedRPM(float speedRPM);
 
 	inline bool isMoving() const;
@@ -161,6 +161,7 @@ private:
 	 */
 	uint16_t currentAcceleration = 0;
 
+	inline void setTargetPosition(long targetPosition);
 	inline void setDirection(bool CW);
 	inline void setSpeedSPS(uint16_t speedSPS);
 

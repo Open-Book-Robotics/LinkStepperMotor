@@ -78,6 +78,11 @@ void LinkStepperMotor::setTargetPosition(long targetPosition) {
 	this->currentDirection = this->targetPosition > this->currentPosition;
 }
 
+void LinkStepperMotor::setTargetPositionDegrees(float targetAngleDegrees) {
+	long targetPosition = this->convertDegreesToSteps(targetAngleDegrees);
+	this->setTargetPosition(targetPosition);
+}
+
 void LinkStepperMotor::setSpeedRPM(float speedRPM) {
 	uint16_t linkSPS = (speedRPM / 60.0f) * this->stepsPerRevolution * this->gearRatio;
 	this->setSpeedSPS(linkSPS);
