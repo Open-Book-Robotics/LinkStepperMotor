@@ -38,13 +38,13 @@ public:
 	 * @brief Copy constructor deleted to prevent copying of object.
 	 *
 	 */
-	LinkStepperMotor(const LinkStepperMotor&) = delete;
+	LinkStepperMotor(const LinkStepperMotor&) = default;
 
 	/**
 	 * @brief Assignment operator deleted to prevent copying of object.
 	 *
 	 */
-	LinkStepperMotor& operator=(const LinkStepperMotor&) = delete;
+	LinkStepperMotor& operator=(const LinkStepperMotor&) = default;
 
 	/**
 	 * @brief Parameterized constructor to initialize the LinkStepperMotor object.
@@ -73,10 +73,10 @@ public:
 	inline long getTargetPosition() const { return this->targetPosition; }
 	inline float getCurrentAngle() const { return this->currentAngle; }
 
-	inline void setTargetPositionDegrees(float targetAngleDegrees);
-	inline void setSpeedRPM(float speedRPM);
+	void setTargetPositionDegrees(float targetAngleDegrees);
+	void setSpeedRPM(float speedRPM);
 
-	inline bool isMoving();
+	bool isMoving();
 
 	void update();
 
