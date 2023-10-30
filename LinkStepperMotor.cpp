@@ -24,8 +24,8 @@ void LinkStepperMotor::disable() { digitalWrite(this->enablePin, HIGH); }
 bool LinkStepperMotor::isEnabled() { return !digitalRead(this->enablePin); }
 
 bool LinkStepperMotor::readDirectionPin() { return digitalRead(this->dirPin); }
-long LinkStepperMotor::getCurrentPosition() { return this->currentPosition; }
-long LinkStepperMotor::getTargetPosition() { return this->targetPosition; }
+int16_t LinkStepperMotor::getCurrentPosition() { return this->currentPosition; }
+int16_t LinkStepperMotor::getTargetPosition() { return this->targetPosition; }
 float LinkStepperMotor::getCurrentAngle() { return this->currentAngle; }
 uint16_t LinkStepperMotor::getSpeedSPS() { return this->currentSpeedSPS; }
 unsigned long LinkStepperMotor::getDelay() { return this->currentDelay; }
@@ -85,7 +85,7 @@ void LinkStepperMotor::updateCurrentAngle() {
 	this->currentAngle = (this->currentPosition / ((float)this->stepsPerRevolution * this->gearRatio)) * 360.0f;
 }
 
-void LinkStepperMotor::setTargetPosition(long targetPosition) {
+void LinkStepperMotor::setTargetPosition(int16_t targetPosition) {
 	this->previousTargetPosition = this->currentPosition;
 	this->targetPosition = targetPosition;
 	this->currentDirection = this->targetPosition < this->currentPosition; // true if CW, false if CCW
@@ -93,7 +93,7 @@ void LinkStepperMotor::setTargetPosition(long targetPosition) {
 }
 
 void LinkStepperMotor::setTargetPositionDegrees(float targetAngleDegrees) {
-	long targetPosition = this->convertDegreesToSteps(targetAngleDegrees);
+	int16_t targetPosition = this->convertDegreesToSteps(targetAngleDegrees);
 	this->setTargetPosition(targetPosition);
 }
 

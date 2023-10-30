@@ -70,8 +70,8 @@ public:
 	void calibrate(bool calibrationDirection, bool calibrationNO = true);
 
 	bool readDirectionPin();
-	long getCurrentPosition();
-	long getTargetPosition();
+	int16_t getCurrentPosition();
+	int16_t getTargetPosition();
 	float getCurrentAngle();
 	uint16_t getSpeedSPS();
 	unsigned long getDelay();
@@ -118,20 +118,20 @@ private:
 	 * @brief The current position of the motor [steps]
 	 *
 	 */
-	volatile long currentPosition = 0;
+	volatile int16_t currentPosition = 0;
 
 	/**
 	 * @brief The previous assigned target position of the motor [steps]
 	 *
 	 */
-	long previousTargetPosition = 0;
+	int16_t previousTargetPosition = 0;
 
 	/**
 	 * @brief The target position of the motor [steps]
 	 *
 	 * @note This value is updated by setting the target but only update() functions will move the motor.
 	 */
-	volatile long targetPosition = 0;
+	int16_t targetPosition = 0;
 
 	/**
 	 * @brief The current direction of the motor [True -> CW, False -> CCW]
@@ -156,7 +156,7 @@ private:
 	/**
 	 * @brief The current speed of the motor [steps/second]
 	 *
-	 * @note Defaults to 60 RPM (1 revolution/second)
+	 * @note Defaults to 60 RPM [1 revolution/second], 3200 [steps/second]
 	 *
 	 */
 	uint16_t currentSpeedSPS = 3200;
@@ -175,7 +175,7 @@ private:
 	 */
 	uint16_t currentAcceleration = 0;
 
-	void setTargetPosition(long targetPosition);
+	void setTargetPosition(int16_t targetPosition);
 	void setDirection(bool CW);
 	void setSpeedSPS(uint16_t speedSPS);
 
@@ -185,9 +185,9 @@ private:
 	 * @note This is NOT relative to the current position of the motor, it is simply a conversion function of desired output degrees to steps
 	 *
 	 * @param degrees The target angle of the motor [degrees] [0, 360)
-	 * @return uint16_t The number of steps the motor needs to move to accomplish the target angle
+	 * @return int16_t The number of steps the motor needs to move to accomplish the target angle
 	 */
-	uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
+	int16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
 
 	/**
 	 * @brief Given a speed [steps/second], calculate the delay between steps [microseconds]
