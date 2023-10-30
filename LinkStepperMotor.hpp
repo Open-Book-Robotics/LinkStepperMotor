@@ -61,24 +61,38 @@ public:
 	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio) :
 		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), calibrationPin(calibrationPin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
 
-	inline void enable() { digitalWrite(this->enablePin, LOW); }
-	inline void disable() { digitalWrite(this->enablePin, HIGH); }
-	inline bool isEnabled() const { return !digitalRead(this->enablePin); }
+	void enable();
+	void disable();
+	bool isEnabled();
 
 	void initialize();
 
 	void calibrate(bool calibrationDirection, bool calibrationNO = true);
 
-	inline long getCurrentPosition() const { return this->currentPosition; }
-	inline long getTargetPosition() const { return this->targetPosition; }
-	inline float getCurrentAngle() const { return this->currentAngle; }
+	bool readDirectionPin();
+	long getCurrentPosition();
+	long getTargetPosition();
+	float getCurrentAngle();
+	uint16_t getSpeedSPS();
+	unsigned long getDelay();
 
 	void setTargetPositionDegrees(float targetAngleDegrees);
 	void setSpeedRPM(float speedRPM);
 
 	bool isMoving();
 
+	/**
+	 * @brief Asynchronous update function that utilizes the current delay and a micros() timer
+	 * 				to determine when to step the motor.
+	 *
+	 */
 	void update();
+
+	/**
+	 * @brief Performs a single step using the current delay.
+	 *
+	 */
+	void stepMotor();
 
 private:
 	const uint8_t stepPin;
@@ -104,20 +118,20 @@ private:
 	 * @brief The current position of the motor [steps]
 	 *
 	 */
-	long currentPosition = 0;
+	volatile long currentPosition = 0;
 
 	/**
-	 * @brief The previous position of the motor [steps]
+	 * @brief The previous assigned target position of the motor [steps]
 	 *
 	 */
-	long previousPosition = 0;
+	long previousTargetPosition = 0;
 
 	/**
 	 * @brief The target position of the motor [steps]
 	 *
 	 * @note This value is updated by setting the target but only update() functions will move the motor.
 	 */
-	long targetPosition = 0;
+	volatile long targetPosition = 0;
 
 	/**
 	 * @brief The current direction of the motor [True -> CW, False -> CCW]
@@ -130,7 +144,7 @@ private:
 	 *
 	 * @note This is intended to be assigned to the output of micros() function.
 	 */
-	unsigned long previousModulationTime = 0;
+	volatile unsigned long previousModulationTime = 0;
 
 	/**
 	 * @brief The current delay between steps [microseconds]
@@ -145,7 +159,7 @@ private:
 	 * @note Defaults to 60 RPM (1 revolution/second)
 	 *
 	 */
-	uint16_t currentSpeedSPS = this->stepsPerRevolution * this->gearRatio;
+	uint16_t currentSpeedSPS = 3200;
 
 	/**
 	 * @brief The current speed of the motor [revolutions/minute]
@@ -161,9 +175,9 @@ private:
 	 */
 	uint16_t currentAcceleration = 0;
 
-	inline void setTargetPosition(long targetPosition);
-	inline void setDirection(bool CW);
-	inline void setSpeedSPS(uint16_t speedSPS);
+	void setTargetPosition(long targetPosition);
+	void setDirection(bool CW);
+	void setSpeedSPS(uint16_t speedSPS);
 
 	/**
 	 * @brief Converts the target output angle into steps the link motor needs to accomplish that angle
@@ -173,7 +187,7 @@ private:
 	 * @param degrees The target angle of the motor [degrees] [0, 360)
 	 * @return uint16_t The number of steps the motor needs to move to accomplish the target angle
 	 */
-	inline uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
+	uint16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
 
 	/**
 	 * @brief Given a speed [steps/second], calculate the delay between steps [microseconds]
@@ -182,13 +196,7 @@ private:
 	 *
 	 * @return unsigned long representing the delay between steps [microseconds]
 	 */
-	static inline unsigned long getDelayFromSpeed(uint16_t speed) { return (long)(1000000.0f / speed); }
+	static unsigned long getDelayFromSpeed(uint16_t speed) { return (unsigned long)(1000000.0f / speed); }
 
-	/**
-	 * @brief Performs a single step using the current delay.
-	 *
-	 */
-	void stepMotor();
-
-	inline void updateCurrentAngle();
+	void updateCurrentAngle();
 };

@@ -12,8 +12,23 @@ void LinkStepperMotor::initialize() {
 	pinMode(this->dirPin, OUTPUT);
 	pinMode(this->enablePin, OUTPUT);
 
+	// Set initial pin states
+	digitalWrite(this->stepPin, LOW);
+	digitalWrite(this->dirPin, LOW);
+
 	this->enable();
 }
+
+void LinkStepperMotor::enable() { digitalWrite(this->enablePin, LOW); }
+void LinkStepperMotor::disable() { digitalWrite(this->enablePin, HIGH); }
+bool LinkStepperMotor::isEnabled() { return !digitalRead(this->enablePin); }
+
+bool LinkStepperMotor::readDirectionPin() { return digitalRead(this->dirPin); }
+long LinkStepperMotor::getCurrentPosition() { return this->currentPosition; }
+long LinkStepperMotor::getTargetPosition() { return this->targetPosition; }
+float LinkStepperMotor::getCurrentAngle() { return this->currentAngle; }
+uint16_t LinkStepperMotor::getSpeedSPS() { return this->currentSpeedSPS; }
+unsigned long LinkStepperMotor::getDelay() { return this->currentDelay; }
 
 void LinkStepperMotor::calibrate(bool calibrationDirection, bool calibrationNO) {
 	if (this->calibrationPin == -1) { return; }
@@ -48,14 +63,12 @@ void LinkStepperMotor::update() {
 		// Swap HIGH/LOW pulse on every occurance of the delay
 		this->isRunning = !this->isRunning;
 		this->isRunning ? digitalWrite(this->stepPin, HIGH) : digitalWrite(this->stepPin, LOW);
+		// Increment/Decrement steps during LOW pulse in order to avoid missing steps
+		if (!this->isRunning && this->currentPosition != this->targetPosition) {
+			this->currentPosition < this->targetPosition ? this->currentPosition++ : this->currentPosition--;
+		}
 		this->previousModulationTime = currentTime;
 		// Speed can be reassigned here to compute a new currentDelay depending on the progress of the movement
-		if (!this->isRunning) {
-			// Increment/Decrement steps during LOW pulse in order to avoid missing steps
-			if (this->currentPosition != this->targetPosition) {
-				this->currentPosition < this->targetPosition ? this->currentPosition++ : this->currentPosition--;
-			}
-		}
 	}
 }
 
@@ -73,9 +86,10 @@ void LinkStepperMotor::updateCurrentAngle() {
 }
 
 void LinkStepperMotor::setTargetPosition(long targetPosition) {
-	this->previousPosition = this->currentPosition;
+	this->previousTargetPosition = this->currentPosition;
 	this->targetPosition = targetPosition;
-	this->currentDirection = this->targetPosition > this->currentPosition;
+	this->currentDirection = this->targetPosition < this->currentPosition; // true if CW, false if CCW
+	this->setDirection(this->currentDirection);
 }
 
 void LinkStepperMotor::setTargetPositionDegrees(float targetAngleDegrees) {
