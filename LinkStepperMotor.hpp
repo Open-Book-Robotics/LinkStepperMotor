@@ -55,18 +55,20 @@ public:
 	 * @param calibrationPin The pin number to which a calibration sensor (limit switch or hall effect) of the stepper motor is connected.
 	 * @param stepsPerRevolution The number of steps per revolution of the stepper motor, ensure that this value already accounts for microstepping.
 	 * @param gearRatio The gear ratio of the output. (Eg. 1:5 gear ratio would be 5, for 5 revolutions of the motor, the output would rotate 1 revolution)
+	 * @param minAngle The minimum angle of the motor [degrees]
+	 * @param maxAngle The maximum angle of the motor [degrees]
 	 *
 	 * @note If the motor does not have a calibration sensor, set this value to -1.
 	 */
-	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio) :
-		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), calibrationPin(calibrationPin), stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio) {}
+	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio, float minAngle, float maxAngle) :
+		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), calibrationPin(calibrationPin),
+		stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio), minAngle(minAngle), maxAngle(maxAngle) {}
 
 	void enable();
 	void disable();
 	bool isEnabled();
 
 	void initialize();
-
 	void calibrate(bool calibrationDirection, bool calibrationNO = true);
 
 	bool readDirectionPin();
@@ -75,6 +77,8 @@ public:
 	float getCurrentAngle();
 	uint16_t getSpeedSPS();
 	unsigned long getDelay();
+
+	bool isInRangeOfMotion(float angleDegrees);
 
 	void setTargetPositionDegrees(float targetAngleDegrees);
 	void setSpeedRPM(float speedRPM);
@@ -101,6 +105,8 @@ private:
 	const uint8_t calibrationPin;
 	const uint16_t stepsPerRevolution;
 	const float gearRatio;
+	const float minAngle;
+	const float maxAngle;
 
 	/**
 	 * @brief A flag that the update() function uses to swap between a HIGH/LOW pulse on every iteration

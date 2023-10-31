@@ -92,7 +92,19 @@ void LinkStepperMotor::setTargetPosition(int16_t targetPosition) {
 	this->setDirection(this->currentDirection);
 }
 
+bool LinkStepperMotor::isInRangeOfMotion(float angleDegrees) {
+	return angleDegrees >= this->minAngle && angleDegrees <= this->maxAngle;
+}
+
 void LinkStepperMotor::setTargetPositionDegrees(float targetAngleDegrees) {
+	if (!isInRangeOfMotion(targetAngleDegrees)) {
+		// Flip the angle if it is out of range as well as the direction
+		targetAngleDegrees = targetAngleDegrees - 360.0f;
+		if (!isInRangeOfMotion(targetAngleDegrees)) {
+			// If the angle is still out of range, return
+			return;
+		}
+	}
 	int16_t targetPosition = this->convertDegreesToSteps(targetAngleDegrees);
 	this->setTargetPosition(targetPosition);
 }
