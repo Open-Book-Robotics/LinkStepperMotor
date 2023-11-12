@@ -175,6 +175,8 @@ public:
 	 */
 	void update();
 
+	void updateTrapezoidal();
+
 	/**
 	 * @brief Asynchronous update function that utilizes an acceleration profile to determine the current pulse interval
 	 * 				at each step and a micros() timer to determine when to step the motor.
@@ -243,7 +245,7 @@ private:
 	volatile unsigned long previousModulationTime = 0;
 
 	/**
-	 * @brief The current pu;se interval between steps [microseconds]
+	 * @brief The current pulse interval between steps [microseconds]
 	 *
 	 * @note This is computed using the current speed and acceleration.
 	 */
@@ -252,10 +254,10 @@ private:
 	/**
 	 * @brief The current speed of the motor [steps/second]
 	 *
-	 * @note Defaults to 60 RPM [1 revolution/second] which is the steps per revolution of the motor.
+	 * @note Defaults to 60 RPM [1 revolution/second] in the initialize function.
 	 *
 	 */
-	uint16_t currentSpeedSPS = this->stepsPerRevolution;
+	uint16_t currentSpeedSPS = 0;
 
 	/**
 	 * @brief The current speed of the motor [revolutions/minute]
@@ -265,23 +267,27 @@ private:
 	 */
 	float currentSpeedRPM = 60;
 
+	int16_t maxSpeedSPS = 6000;
+
+	int16_t minSpeedSPS = 3000;
+
 	/**
 	 * @brief The initial speed of the motor when performing motion-profiled movement [steps/second]
 	 *
 	 */
-	static constexpr int16_t initialSpeedSPS = 8000;
+	static const int16_t initialSpeedSPS = 1600;
 
 	/**
 	 * @brief The k (acceleration rate) value used in the acceleration profile [steps/second^2]
 	 *
 	 */
-	static constexpr int16_t accelerationRate = 200;
+	static const int16_t accelerationRate = 100;
 
 	/**
 	 * @brief The initial acceleration of the motor when performing motion-profiled movement [steps/second^2]
 	 *
 	 */
-	static constexpr int16_t initialAcceleration = 200;
+	static const int16_t initialAcceleration = 100;
 
 	/**
 	 * @brief Sets the target motor position [steps]
@@ -328,14 +334,6 @@ private:
 	static unsigned long getPulseIntervalFromSpeed(uint16_t speed) { return (unsigned long)(1000000.0f / speed); }
 
 	/**
-	 * @brief Given a pulse interval [microseconds], calculate the speed [steps/second]
-	 *
-	 * @param pulseInterval The pulse interval between steps [microseconds] which determines the stepper motor speed
-	 * @return uint16_t representing the speed of the motor [steps/second]
-	 */
-	static uint16_t getSpeedFromPulseInterval(unsigned long pulseInterval) { return (uint16_t)(1000000.0f / pulseInterval); }
-
-	/**
 	 * @brief Computes the current angle [degrees] using the current motor position [steps]
 	 * 				and updates the internal field.
 	 *
@@ -343,6 +341,8 @@ private:
 	void updateCurrentAngle();
 
 	void computeNewPulseInterval();
+
+	void computeNewPulseIntervalTrapezoidal();
 };
 
 #endif // LINKSTEPPERMOTOR_HPP

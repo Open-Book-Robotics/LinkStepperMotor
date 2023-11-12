@@ -16,6 +16,8 @@ void LinkStepperMotor::initialize() {
 	digitalWrite(this->stepPin, LOW);
 	digitalWrite(this->dirPin, LOW);
 
+	this->setSpeedRPM(30);
+
 	this->enable();
 }
 
@@ -70,6 +72,27 @@ void LinkStepperMotor::update() {
 	}
 }
 
+void LinkStepperMotor::updateTrapezoidal() {
+	// If the motor is not moving, we have reached the target
+	if (!this->isMoving()) { return; }
+
+	// Determine the time since the last step
+	unsigned long currentTime = micros();
+	unsigned long timeSinceLastStep = currentTime - this->previousModulationTime;
+	if (timeSinceLastStep > this->currentPulseInterval) {
+		// Swap HIGH/LOW pulse on every occurance of the delay
+		this->isRunning = !this->isRunning;
+		this->isRunning ? digitalWrite(this->stepPin, HIGH) : digitalWrite(this->stepPin, LOW);
+		// Increment/Decrement steps during LOW pulse in order to avoid missing steps
+		if (!this->isRunning && this->currentPosition != this->targetPosition) {
+			this->currentPosition < this->targetPosition ? this->currentPosition++ : this->currentPosition--;
+		}
+		this->previousModulationTime = currentTime;
+		// Speed can be reassigned here to compute a new currentPulseInterval depending on the progress of the movement
+		this->computeNewPulseIntervalTrapezoidal();
+	}
+}
+
 void LinkStepperMotor::updateAccel() {
 	// If the motor is not moving, we have reached the target
 	if (!this->isMoving()) { return; }
@@ -88,6 +111,29 @@ void LinkStepperMotor::updateAccel() {
 		this->previousModulationTime = currentTime;
 		// Speed can be reassigned here to compute a new currentPulseInterval depending on the progress of the movement
 		this->computeNewPulseInterval();
+	}
+}
+
+void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
+	// Acceleration curve is split into 3 parts: acceleration, steady-state, deceleration
+	// TODO: inline functions for efficiency
+	int stepsToMove = abs(this->targetPosition - this->currentPosition);
+	int stepsCompleted = abs(this->currentPosition - this->previousTargetPosition);
+	int stepsAccel = stepsToMove * 0.4f; // same as stepsDecel
+	int stepsMax = stepsToMove * 0.2f;
+	float accelConstant = (this->maxSpeedSPS - this->minSpeedSPS) / (stepsAccel);
+
+	// Determine which range we are in to apply the correct part of the acceleration curve
+	if (stepsCompleted < stepsAccel) {
+		int16_t speedSPS = (accelConstant * stepsCompleted) + minSpeedSPS;
+		this->setSpeedSPS(speedSPS);
+	} else if (stepsCompleted >= stepsAccel && stepsCompleted <= (stepsAccel + stepsMax)) {
+		this->setSpeedSPS(this->maxSpeedSPS);
+	} else if (stepsCompleted > (stepsAccel + stepsMax) && stepsCompleted <= stepsToMove) {
+		int16_t speedSPS = (accelConstant * (stepsToMove - stepsCompleted)) + minSpeedSPS;
+		this->setSpeedSPS(speedSPS);
+	} else { // Shouldn't happen
+		this->setSpeedSPS(this->minSpeedSPS);
 	}
 }
 
@@ -136,6 +182,7 @@ void LinkStepperMotor::updateCurrentAngle() {
 }
 
 void LinkStepperMotor::setTargetPosition(int16_t targetPosition) {
+	if (isMoving()) { return; } // Can't set new target position if the motor is already moving
 	this->previousTargetPosition = this->currentPosition;
 	this->targetPosition = targetPosition;
 	this->currentDirection = this->targetPosition < this->currentPosition; // true if CW, false if CCW
