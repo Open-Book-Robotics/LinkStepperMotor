@@ -343,6 +343,10 @@ private:
 	void computeNewPulseInterval();
 
 	void computeNewPulseIntervalTrapezoidal();
+
+	inline int16_t getStepsRemaining();
+
+	inline int16_t getStepsCompleted();
 };
 
 #endif // LINKSTEPPERMOTOR_HPP

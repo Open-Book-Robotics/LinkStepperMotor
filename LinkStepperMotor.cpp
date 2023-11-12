@@ -117,8 +117,8 @@ void LinkStepperMotor::updateAccel() {
 void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
 	// Acceleration curve is split into 3 parts: acceleration, steady-state, deceleration
 	// TODO: inline functions for efficiency
-	int stepsToMove = abs(this->targetPosition - this->currentPosition);
-	int stepsCompleted = abs(this->currentPosition - this->previousTargetPosition);
+	int stepsToMove = this->getStepsRemaining();
+	int stepsCompleted = this->getStepsCompleted();
 	int stepsAccel = stepsToMove * 0.4f; // same as stepsDecel
 	int stepsMax = stepsToMove * 0.2f;
 	float accelConstant = (this->maxSpeedSPS - this->minSpeedSPS) / (stepsAccel);
@@ -218,3 +218,6 @@ void LinkStepperMotor::setDirection(bool CW) {
 	CW ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
 	this->currentDirection = CW;
 }
+
+inline int16_t LinkStepperMotor::getStepsRemaining() { return abs(this->targetPosition - this->currentPosition); }
+inline int16_t LinkStepperMotor::getStepsCompleted() { return abs(this->currentPosition - this->previousTargetPosition); }
