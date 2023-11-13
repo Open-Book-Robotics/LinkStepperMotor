@@ -117,10 +117,10 @@ void LinkStepperMotor::updateAccel() {
 void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
 	// Acceleration curve is split into 3 parts: acceleration, steady-state, deceleration
 	// TODO: inline functions for efficiency
-	int stepsToMove = this->getStepsRemaining();
-	int stepsCompleted = this->getStepsCompleted();
-	int stepsAccel = stepsToMove * 0.4f; // same as stepsDecel
-	int stepsMax = stepsToMove * 0.2f;
+	int16_t stepsRemaining = this->getStepsRemaining();
+	int16_t stepsCompleted = this->getStepsCompleted();
+	int16_t stepsAccel = stepsRemaining * 0.4f; // same as stepsDecel
+	int16_t stepsMax = stepsRemaining * 0.2f;
 	float accelConstant = (this->maxSpeedSPS - this->minSpeedSPS) / (stepsAccel);
 
 	// Determine which range we are in to apply the correct part of the acceleration curve
@@ -129,8 +129,8 @@ void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
 		this->setSpeedSPS(speedSPS);
 	} else if (stepsCompleted >= stepsAccel && stepsCompleted <= (stepsAccel + stepsMax)) {
 		this->setSpeedSPS(this->maxSpeedSPS);
-	} else if (stepsCompleted > (stepsAccel + stepsMax) && stepsCompleted <= stepsToMove) {
-		int16_t speedSPS = (accelConstant * (stepsToMove - stepsCompleted)) + minSpeedSPS;
+	} else if (stepsCompleted > (stepsAccel + stepsMax) && stepsCompleted <= stepsRemaining) {
+		int16_t speedSPS = (accelConstant * (stepsRemaining - stepsCompleted)) + minSpeedSPS;
 		this->setSpeedSPS(speedSPS);
 	} else { // Shouldn't happen
 		this->setSpeedSPS(this->minSpeedSPS);
@@ -140,10 +140,10 @@ void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
 void LinkStepperMotor::computeNewPulseInterval() {
 	// Acceleration curve is split into 3 parts: acceleration, steady-state, deceleration
 	int totalSteps = abs(this->targetPosition - this->previousTargetPosition);
-	int stepsRemaining = abs(this->targetPosition - this->currentPosition);
+	int stepsRemaining = this->getStepsRemaining();
 	int stepsCompleted = totalSteps - stepsRemaining;
 	int n1 = totalSteps / 3;
-	int n2 = totalSteps - n1;
+	int n2 = 2 * n1;
 	uint16_t speedSPS = this->currentSpeedSPS;
 	// Determine which range we are in to apply the correct part of the acceleration curve
 	if (stepsCompleted <= n1) {
@@ -159,11 +159,11 @@ void LinkStepperMotor::computeNewPulseInterval() {
 	} else { // (stepsCompleted >= n2)
 		// Deceleration
 		// a(n) = -k * n + k * n2 + a_max
-		// v(n) = -0.5 * k * n^2 + (k * n1 + k * n2 + a0) * n - 0.5 * k * (n1^2 + n2^2) - (k * n1 + a0) * (n1 - n2)
+		// v(n) = -0.5 * k * n^2 + (k * n1 + k * n2 + a0) * n - 0.5 * k * (n1^2 + n2^2) + v0
 		speedSPS = (-0.5f * this->accelerationRate * pow(stepsCompleted, 2))
 			+ (this->accelerationRate * n1 + this->accelerationRate * n2 + this->initialAcceleration) * stepsCompleted
 			- (0.5f * this->accelerationRate * (pow(n1, 2) + pow(n2, 2)))
-			- ((this->accelerationRate * n1 + this->initialAcceleration) * (n1 - n2));
+			+ this->initialSpeedSPS;
 	}
 	this->setSpeedSPS(speedSPS);
 }
@@ -221,3 +221,4 @@ void LinkStepperMotor::setDirection(bool CW) {
 
 inline int16_t LinkStepperMotor::getStepsRemaining() { return abs(this->targetPosition - this->currentPosition); }
 inline int16_t LinkStepperMotor::getStepsCompleted() { return abs(this->currentPosition - this->previousTargetPosition); }
+inline int16_t LinkStepperMotor::getTotalStepsToTarget() { return abs(this->targetPosition - this->previousTargetPosition); }

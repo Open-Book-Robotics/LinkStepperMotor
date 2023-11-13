@@ -267,27 +267,35 @@ private:
 	 */
 	float currentSpeedRPM = 60;
 
-	int16_t maxSpeedSPS = 6000;
+	/**
+	 * @brief The maximum speed for a trapezoidal motion-profiled movement [steps/second]
+	 *
+	 */
+	static constexpr int16_t maxSpeedSPS = 6000;
 
-	int16_t minSpeedSPS = 3000;
+	/**
+	 * @brief The minimum speed for a trapezoidal motion-profiled movement [steps/second]
+	 *
+	 */
+	static constexpr int16_t minSpeedSPS = 3000;
 
 	/**
 	 * @brief The initial speed of the motor when performing motion-profiled movement [steps/second]
 	 *
 	 */
-	static const int16_t initialSpeedSPS = 1600;
+	static constexpr int16_t initialSpeedSPS = 2000;
 
 	/**
 	 * @brief The k (acceleration rate) value used in the acceleration profile [steps/second^2]
 	 *
 	 */
-	static const int16_t accelerationRate = 100;
+	static constexpr float accelerationRate = 0.003f;
 
 	/**
 	 * @brief The initial acceleration of the motor when performing motion-profiled movement [steps/second^2]
 	 *
 	 */
-	static const int16_t initialAcceleration = 100;
+	static constexpr float initialAcceleration = 0.7f;
 
 	/**
 	 * @brief Sets the target motor position [steps]
@@ -347,6 +355,8 @@ private:
 	inline int16_t getStepsRemaining();
 
 	inline int16_t getStepsCompleted();
+
+	inline int16_t getTotalStepsToTarget();
 };
 
 #endif // LINKSTEPPERMOTOR_HPP
