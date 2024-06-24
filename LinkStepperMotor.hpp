@@ -330,7 +330,7 @@ private:
 	 * @param degrees The target angle of the motor [degrees] [0, 360)
 	 * @return int16_t The number of steps the motor needs to move to accomplish the target angle
 	 */
-	int16_t convertDegreesToSteps(float degrees) const { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
+	int16_t convertDegreesToSteps(float degrees);
 
 	/**
 	 * @brief Given a speed [steps/second], calculate the pulse interval between steps [microseconds]

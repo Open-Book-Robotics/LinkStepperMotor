@@ -219,6 +219,7 @@ void LinkStepperMotor::setDirection(bool CW) {
 	this->currentDirection = CW;
 }
 
+inline int16_t LinkStepperMotor::convertDegreesToSteps(float degrees) { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
 inline int16_t LinkStepperMotor::getStepsRemaining() { return abs(this->targetPosition - this->currentPosition); }
 inline int16_t LinkStepperMotor::getStepsCompleted() { return abs(this->currentPosition - this->previousTargetPosition); }
 inline int16_t LinkStepperMotor::getTotalStepsToTarget() { return abs(this->targetPosition - this->previousTargetPosition); }
