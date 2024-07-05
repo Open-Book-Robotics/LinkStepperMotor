@@ -1,11 +1,6 @@
 #include "LinkStepperMotor.hpp"
 #include <Arduino.h>
 
-// TODO: Write documentation for all functions
-// TODO: Add support for acceleration and deceleration curves
-// TODO: Move all implementation to .cpp file and offer .hpp as the only visible file for library
-// TODO: Test library with physical hardware
-
 void LinkStepperMotor::initialize() {
 	// Setup pins
 	pinMode(this->stepPin, OUTPUT);
@@ -32,21 +27,29 @@ uint16_t LinkStepperMotor::getSpeedSPS() { return this->currentSpeedSPS; }
 unsigned long LinkStepperMotor::getPulseInterval() { return this->currentPulseInterval; }
 
 void LinkStepperMotor::calibrate(bool calibrationDirection, bool calibrationNO) {
-	if (this->calibrationPin == -1) { return; }
+	if (this->calibrationPin == -1) {
+		Logger::debug("Calibration Pin not set, skipping calibration");
+		return;
+	}
 	// Set the calibration pin to the correct mode
 	if (calibrationNO) {
 		pinMode(this->calibrationPin, INPUT_PULLUP);
 	} else {
 		pinMode(this->calibrationPin, INPUT);
 	}
-	// Set the calibration pin to the correct state
+	// Set the calibration direction and speed
 	calibrationDirection ? digitalWrite(this->dirPin, HIGH) : digitalWrite(this->dirPin, LOW);
+	float originalSpeedRPM = this->currentSpeedRPM;
+	this->setSpeedRPM(this->currentSpeedRPM * 0.5f);
 
 	// Wait for the calibration pin to be pressed
 	int initialCalibrationPinState = digitalRead(calibrationPin);
 	while (digitalRead(calibrationPin) != initialCalibrationPinState) {
 		this->stepMotor();
 	}
+
+	// Reset the link speed
+	this->setSpeedRPM(originalSpeedRPM);
 
 	// Set the current position to 0
 	this->currentPosition = 0;
@@ -117,10 +120,10 @@ void LinkStepperMotor::updateAccel() {
 void LinkStepperMotor::computeNewPulseIntervalTrapezoidal() {
 	// Acceleration curve is split into 3 parts: acceleration, steady-state, deceleration
 	// TODO: inline functions for efficiency
-	int16_t stepsRemaining = this->getStepsRemaining();
-	int16_t stepsCompleted = this->getStepsCompleted();
-	int16_t stepsAccel = stepsRemaining * 0.4f; // same as stepsDecel
-	int16_t stepsMax = stepsRemaining * 0.2f;
+	int stepsRemaining = this->getStepsRemaining();
+	int stepsCompleted = this->getStepsCompleted();
+	int stepsAccel = stepsRemaining * 0.4f; // same as stepsDecel
+	int stepsMax = stepsRemaining * 0.2f;
 	float accelConstant = (this->maxSpeedSPS - this->minSpeedSPS) / (stepsAccel);
 
 	// Determine which range we are in to apply the correct part of the acceleration curve
@@ -220,6 +223,6 @@ void LinkStepperMotor::setDirection(bool CW) {
 }
 
 inline int16_t LinkStepperMotor::convertDegreesToSteps(float degrees) { return round((degrees / 360.0f) * this->stepsPerRevolution * this->gearRatio); }
-inline int16_t LinkStepperMotor::getStepsRemaining() { return abs(this->targetPosition - this->currentPosition); }
-inline int16_t LinkStepperMotor::getStepsCompleted() { return abs(this->currentPosition - this->previousTargetPosition); }
-inline int16_t LinkStepperMotor::getTotalStepsToTarget() { return abs(this->targetPosition - this->previousTargetPosition); }
+inline uint16_t LinkStepperMotor::getStepsRemaining() { return abs(this->targetPosition - this->currentPosition); }
+inline uint16_t LinkStepperMotor::getStepsCompleted() { return abs(this->currentPosition - this->previousTargetPosition); }
+inline uint16_t LinkStepperMotor::getTotalStepsToTarget() { return abs(this->targetPosition - this->previousTargetPosition); }

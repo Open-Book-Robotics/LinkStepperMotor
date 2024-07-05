@@ -4,8 +4,7 @@
  * @file LinkStepperMotor.hpp
  * @author Sharwin Patil, OpenBook Robotics
  * @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
- * @version 2.0
- * @date 2023-11-09
+ * @version 5.0
  *
  * @copyright Copyright (c) 2023
  *
@@ -13,13 +12,10 @@
 
 #include <Arduino.h>
 
-
- /// TODO: Documentation
-
-/**
-* @brief A Stepper Motor library for Arduino with a specific focus on robotic arm applications.
-*
-*/
+ /**
+ * @brief A Stepper Motor library for Arduino with a specific focus on a link motor for a robotic arm.
+ *
+ */
 class LinkStepperMotor {
 public:
 
@@ -175,10 +171,15 @@ public:
 	 */
 	void update();
 
+	/**
+	 * @brief Asynchronous update function that utilizes a trapezoidal acceleration profile to determine the current pulse interval
+	 * 				using a micros() timer to determine when to step the motor.
+	 *
+	 */
 	void updateTrapezoidal();
 
 	/**
-	 * @brief Asynchronous update function that utilizes an acceleration profile to determine the current pulse interval
+	 * @brief Asynchronous update function that utilizes an S-curve acceleration profile to determine the current pulse interval
 	 * 				at each step and a micros() timer to determine when to step the motor.
 	 *
 	 */
@@ -249,7 +250,7 @@ private:
 	 *
 	 * @note This is computed using the current speed and acceleration.
 	 */
-	unsigned long currentPulseInterval = 0;
+	volatile unsigned long currentPulseInterval = 0;
 
 	/**
 	 * @brief The current speed of the motor [steps/second]
@@ -348,15 +349,40 @@ private:
 	 */
 	void updateCurrentAngle();
 
+	/**
+	 * @brief Computes the pulse interval [microseconds] using a S-curve speed/acceleration profile.
+	 * 				Also updates the internal fields
+	 *
+	 */
 	void computeNewPulseInterval();
 
+	/**
+	 * @brief Computes the pulse interval [microseconds] using a trapezoidal speed/acceleration profile.
+	 * 				Also updates the internal fields
+	 *
+	 */
 	void computeNewPulseIntervalTrapezoidal();
 
-	inline int16_t getStepsRemaining();
+	/**
+	 * @brief Computes the amount of steps remaining to reach the target position from the current position.
+	 *
+	 * @return uint16_t representing the number of steps remaining to reach the target position
+	 */
+	inline uint16_t getStepsRemaining();
 
-	inline int16_t getStepsCompleted();
+	/**
+	 * @brief Computes the amount of steps completed from the previous target position to the current position.
+	 *
+	 * @return uint16_t representing the number of steps completed from the previous target position
+	 */
+	inline uint16_t getStepsCompleted();
 
-	inline int16_t getTotalStepsToTarget();
+	/**
+	 * @brief Computes the total number of steps required to reach the target position from the previous target position.
+	 *
+	 * @return uint16_t representing the total number of steps for the current motion (previous target to current target)
+	 */
+	inline uint16_t getTotalStepsToTarget();
 };
 
 #endif // LINKSTEPPERMOTOR_HPP
