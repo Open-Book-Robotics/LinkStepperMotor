@@ -61,7 +61,7 @@ public:
 	 *
 	 * @note If the motor does not have a calibration sensor, set this value to -1.
 	 */
-	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, uint8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio, float minAngle, float maxAngle) :
+	LinkStepperMotor(uint8_t stepPin, uint8_t dirPin, uint8_t enablePin, int8_t calibrationPin, uint16_t stepsPerRevolution, float gearRatio, float minAngle, float maxAngle) :
 		stepPin(stepPin), dirPin(dirPin), enablePin(enablePin), calibrationPin(calibrationPin),
 		stepsPerRevolution(stepsPerRevolution), gearRatio(gearRatio), minAngle(minAngle), maxAngle(maxAngle) {}
 
@@ -194,7 +194,7 @@ private:
 	const uint8_t stepPin;
 	const uint8_t dirPin;
 	const uint8_t enablePin;
-	const uint8_t calibrationPin;
+	const int8_t calibrationPin;
 	const uint16_t stepsPerRevolution;
 	const float gearRatio;
 	const float minAngle;
