@@ -28,7 +28,7 @@ unsigned long LinkStepperMotor::getPulseInterval() { return this->currentPulseIn
 
 void LinkStepperMotor::calibrate(bool calibrationDirection, bool calibrationNO) {
 	if (this->calibrationPin == -1) {
-		// Logger::debug("Calibration Pin not set, skipping calibration");
+		//Logger::debug("Calibration Pin not set, skipping calibration");
 		return;
 	}
 	// Set the calibration pin to the correct mode
