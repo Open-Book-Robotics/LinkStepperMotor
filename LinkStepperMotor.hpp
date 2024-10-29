@@ -191,6 +191,12 @@ public:
 	 */
 	void stepMotor();
 
+	/**
+	 * @brief Public version of setDirection for testing
+	 *
+	*/
+	void publicSetDirection(bool CW) { setDirection(CW); }
+
 private:
 	const uint8_t stepPin;
 	const uint8_t dirPin;
